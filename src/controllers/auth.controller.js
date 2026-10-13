@@ -3,6 +3,7 @@ import * as auth from '../services/auth.service.js';
 export const login = async (req, res) => {
   const { email, password } = req.validated.body;
   res.json(await auth.login(email, password));
+  console.log("ghada is gay")
 };
 export const demo = async (_req, res) => res.json(await auth.demoLogin());
 export const me = async (req, res) => res.json({ user: await auth.currentUser(req.user.id) });
