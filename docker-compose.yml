@@ -1,0 +1,78 @@
+# One command for local dev and demo day:  docker compose up --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: insura
+      POSTGRES_PASSWORD: insura
+      POSTGRES_DB: insuralens
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insura -d insuralens"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mcp:
+    build: .
+    command: ["node", "mcp_server/server.js"]
+    environment:
+      DATABASE_URL: postgres://insura:insura@postgres:5432/insuralens
+      MCP_PORT: "5100"
+      MCP_GRAPH_TOKEN: ${MCP_GRAPH_TOKEN:-graph-token-dev-0001}
+      MCP_REVIEW_TOKEN: ${MCP_REVIEW_TOKEN:-review-token-dev-0001}
+      MCP_ADMIN_TOKEN: ${MCP_ADMIN_TOKEN:-}
+    ports: ["5100:5100"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5100/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  # One-shot: applies migrations, then seeds the demo claim/policies/backlog (idempotent).
+  migrate:
+    build: .
+    command: ["sh", "-c", "node scripts/migrate.js && node scripts/seed.js"]
+    environment:
+      DATABASE_URL: postgres://insura:insura@postgres:5432/insuralens
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-please-123456}
+      MCP_GRAPH_TOKEN: ${MCP_GRAPH_TOKEN:-graph-token-dev-0001}
+      MCP_REVIEW_TOKEN: ${MCP_REVIEW_TOKEN:-review-token-dev-0001}
+      DATA_DIR: /app/data
+    volumes: ["./data:/app/data"]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  backend:
+    build: .
+    environment:
+      DATABASE_URL: postgres://insura:insura@postgres:5432/insuralens
+      RUN_MIGRATIONS_ON_START: "false"
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-please-123456}
+      MCP_URL: http://mcp:5100/mcp
+      MCP_GRAPH_TOKEN: ${MCP_GRAPH_TOKEN:-graph-token-dev-0001}
+      MCP_REVIEW_TOKEN: ${MCP_REVIEW_TOKEN:-review-token-dev-0001}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:5173,http://localhost:5173,https://insura-lens.vercel.app}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      CLOUDINARY_URL: ${CLOUDINARY_URL:-}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-15}
+      DATA_DIR: /app/data
+    volumes: ["./data:/app/data"]
+    ports: ["4000:4000"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      mcp: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pgdata:

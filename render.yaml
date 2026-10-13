@@ -1,0 +1,37 @@
+# Render Blueprint: two web services from the same Docker image. Database = Neon, files = Cloudinary.
+# `sync: false` means Render asks you for the value in the dashboard (secrets are never committed).
+# IMPORTANT: MCP_GRAPH_TOKEN and MCP_REVIEW_TOKEN must be IDENTICAL on both services.
+services:
+  - type: web
+    name: insuralens-mcp
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: node mcp_server/server.js
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - { key: DATABASE_URL, sync: false }
+      - { key: DB_POOL_MAX, value: "3" }
+      - { key: MCP_GRAPH_TOKEN, sync: false }
+      - { key: MCP_REVIEW_TOKEN, sync: false }
+
+  - type: web
+    name: insuralens-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - { key: NODE_ENV, value: production }
+      - { key: DATABASE_URL, sync: false }
+      - { key: DB_POOL_MAX, value: "5" }
+      - { key: JWT_SECRET, generateValue: true }
+      - { key: MCP_URL, sync: false }              # https://<your-mcp-service>.onrender.com/mcp
+      - { key: MCP_GRAPH_TOKEN, sync: false }
+      - { key: MCP_REVIEW_TOKEN, sync: false }
+      - { key: CORS_ORIGINS, sync: false }         # https://insura-lens.vercel.app
+      - { key: STORAGE_DRIVER, value: cloudinary }
+      - { key: CLOUDINARY_URL, sync: false }
+      - { key: MAX_UPLOAD_MB, value: "10" }
+      - { key: RUN_MIGRATIONS_ON_START, value: "true" }
+      - { key: AGENT_STEP_DELAY_MS, value: "1200" }

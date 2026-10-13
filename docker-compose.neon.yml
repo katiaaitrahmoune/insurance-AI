@@ -1,0 +1,49 @@
+# Local containers + HOSTED database.  Postgres lives in Neon, so there is no postgres service here.
+#
+#   1. put your Neon connection string (and Cloudinary settings) in .env
+#   2. docker compose -f docker-compose.neon.yml up --build
+#   3. (once, demo data only)  docker compose -f docker-compose.neon.yml run --rm backend npm run seed
+#
+# Values in `environment:` win over .env, so the container wiring below is always correct.
+x-app: &app
+  build: .
+  env_file: .env
+  volumes: ["./data:/app/data"]
+
+services:
+  # One-shot: applies migrations to Neon. Seeding is deliberately separate (step 3).
+  migrate:
+    <<: *app
+    command: ["node", "scripts/migrate.js"]
+    environment:
+      DATA_DIR: /app/data
+
+  mcp:
+    <<: *app
+    command: ["node", "mcp_server/server.js"]
+    environment:
+      PORT: "5100"
+    ports: ["5100:5100"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5100/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  backend:
+    <<: *app
+    environment:
+      PORT: "4000"
+      MCP_URL: http://mcp:5100/mcp
+      DATA_DIR: /app/data
+      RUN_MIGRATIONS_ON_START: "false"
+    ports: ["4000:4000"]
+    depends_on:
+      mcp: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 15

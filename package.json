@@ -1,0 +1,43 @@
+{
+  "name": "insuralens-backend",
+  "version": "1.0.0",
+  "description": "InsuraLens backend: Express API, PostgreSQL, insuralens-mcp server, human-in-the-loop guardrail",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "mcp": "node mcp_server/server.js",
+    "mcp:dev": "node --watch mcp_server/server.js",
+    "migrate": "node scripts/migrate.js",
+    "seed": "node scripts/seed.js",
+    "reset-demo": "node scripts/reset-demo.js",
+    "test": "node --test --test-concurrency=1 \"tests/*.test.js\"",
+    "inspector": "npx @modelcontextprotocol/inspector",
+    "storage:check": "node scripts/storage-check.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "cloudinary": "^2.11.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
+    "pdf-parse": "1.1.1",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.1"
+  }
+}
