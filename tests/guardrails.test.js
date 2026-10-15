@@ -22,6 +22,7 @@ test('guardrail 1: the agent-facing MCP client has no update_claim at all', () =
   assert.deepEqual(Object.keys(mcp.graph), ['getPolicy']);
   assert.deepEqual(Object.keys(mcp.review), ['updateClaim']);
 });
+console.log("-----------------------------------")
 
 test('guardrail 2: the full analysis path never calls update_claim and never changes status', async () => {
   const res = await analyzeAndWait(request, built.app, built.services, headers);

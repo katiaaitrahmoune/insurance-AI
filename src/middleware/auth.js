@@ -1,10 +1,7 @@
 import { verifyToken } from '../services/auth.service.js';
 import { unauthorized } from '../utils/errors.js';
 
-/**
- * Bearer-token auth. EventSource and <img> cannot send headers, so routes that need them
- * (SSE stream, file download) opt in to `?token=` via { allowQueryToken: true }.
- */
+
 export const requireAuth = ({ allowQueryToken = false } = {}) => (req, _res, next) => {
   const header = req.headers.authorization || '';
   let token = header.startsWith('Bearer ') ? header.slice(7) : '';
