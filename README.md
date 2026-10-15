@@ -96,3 +96,5 @@ Replace `data/images/CLM-1042_*.jpg` (placeholders) with the real photos and `da
 - Uploaded files go to local disk (`STORAGE_DRIVER=local`, dev) or Cloudinary (`cloudinary`, production, authenticated assets only).
 - Markdown policies have no page numbers, so citations carry `page: null`.
 - To start from a clean database after upgrading from an earlier build: `docker compose down -v` then `up --build`.
+
+made by ait rahmoune katia in 15/10/2026
