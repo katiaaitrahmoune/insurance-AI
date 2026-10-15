@@ -5,7 +5,7 @@ import { runMigrations } from '../src/models/migrate.js';
 import { seedDemoData } from '../src/models/seed.js';
 import { policyRowsFromDocs } from '../src/knowledge/policies.js';
 
-// Idempotent: safe to run any number of times.
+console.log("seed.js loqique is here")
 await runMigrations();
 await withTransaction((db) => seedDemoData(db, path.resolve(env.DATA_DIR)));
 
