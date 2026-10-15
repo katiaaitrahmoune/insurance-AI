@@ -18,10 +18,7 @@ import { memoryService } from './services/memory.service.js';
 import { health } from './controllers/misc.controller.js';
 import { docsRouter } from './config/docs.js';
 
-/**
- * App factory. `mcp` and `agents` can be injected so tests can mock the MCP clients and assert
- * on the guardrail (analysis never calls update_claim; review calls it exactly once).
- */
+
 export function createApp({ mcp, agents: agentsOverride } = {}) {
   const clients =
     mcp ?? createMcpClients({ url: env.MCP_URL, graphToken: env.MCP_GRAPH_TOKEN, reviewToken: env.MCP_REVIEW_TOKEN });
@@ -31,12 +28,12 @@ export function createApp({ mcp, agents: agentsOverride } = {}) {
     agentsOverride ??
     createAgentRunner({ mode: env.AGENT_MODE, graphMcp: clients.graph, memory: memoryService, delayMs: env.AGENT_STEP_DELAY_MS });
 
-  // Wiring IS the guardrail: only `review` receives the update_claim-capable client.
   const analysis = createAnalysisService({ agents, events, logger });
   const review = createReviewService({ mcpReview: clients.review, agents, memory: memoryService, logger });
   const chat = createChatService({ analysis });
 
   const app = express();
+   console.log("starting memory service")
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
   app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/health' || req.url === '/api/health' } }));
