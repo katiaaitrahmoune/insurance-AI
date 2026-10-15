@@ -9,6 +9,7 @@ test('date check catches the seeded March 12 vs March 15 mismatch', () => {
   const a = extractAccidentDate('The accident happened on March 12, 2026 at the junction.');
   const b = extractAccidentDate('Narrative: The accident occurred on March 15, 2026 at the junction.');
   assert.equal(a.day, 12);
+  console.log('testing unit started sec ')
   assert.equal(b.day, 15);
   assert.ok(datesDiffer(a, b));
 });
