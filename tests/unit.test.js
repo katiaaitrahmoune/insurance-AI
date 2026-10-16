@@ -12,6 +12,7 @@ test('date check catches the seeded March 12 vs March 15 mismatch', () => {
   console.log('testing unit started sec ')
   assert.equal(b.day, 15);
   assert.ok(datesDiffer(a, b));
+  console.log("fuiduiudijdf uhfiuhdf udfiudfuu")
 });
 
 test('date check: same date in different formats is not a mismatch', () => {
