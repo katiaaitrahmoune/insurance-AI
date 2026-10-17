@@ -5,6 +5,8 @@ import { storage } from '../services/storage.service.js';
 import { pipeline } from 'node:stream/promises';
 import { listEveryFile } from '../models/file.model.js';
 import { serializeFile } from '../utils/serializers.js';
+import { getFile as getFileRow } from '../models/file.model.js';
+import { extractTextFromBuffer } from '../utils/text.js';
 
 export const list = async (req, res) => res.json(await claimService.listClaims(req.validated.query));
 export const create = async (req, res) => res.status(201).json(await claimService.createClaim(req.validated.body, req.files, req.user));
@@ -40,4 +42,18 @@ export const reviewFactory = (review) => async (req, res) => {
 // GET /api/files
 export const listAllFilesHandler = async (_req, res) => {
   res.json({ items: (await listEveryFile()).map(serializeFile) });
+};
+// GET /api/files/:fileId/content?format=base64|text
+export const fileContent = async (req, res) => {
+  const f = await getFileRow(req.params.fileId);
+  if (!f) throw notFound('File not found');
+  const bytes = await storage.read(f);
+  const base = { id: f.id, claimId: f.claim_id, kind: f.kind, name: f.original_name, mimeType: f.mime_type, sizeBytes: bytes.length };
+  if (req.validated.query.format === 'text') {
+    if (!(f.mime_type.startsWith('text/') || f.mime_type === 'application/pdf')) {
+      throw unprocessable('Text is only available for PDF and text files');
+    }
+    return res.json({ ...base, encoding: 'text', content: await extractTextFromBuffer(bytes, f.mime_type) });
+  }
+  res.json({ ...base, encoding: 'base64', content: bytes.toString('base64') });
 };

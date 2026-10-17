@@ -37,6 +37,7 @@ export function buildRouter({ analysis, review, events, chat }) {
   r.get('/claims/:id/files/:fileId', requireAuth({ allowQueryToken: true }), validate({ params: claimIdParam.extend({ fileId: z.string().uuid() }) }), claims.downloadFile);
   r.get('/claims/:id/related-cases', authed, withClaimId, misc.relatedCases);
 r.get('/files', authed, claims.listAllFilesHandler);
+r.get('/files/:fileId/content',  validate({ params: z.object({ fileId: z.string().uuid() }), query: z.object({ format: z.enum(['base64', 'text']).default('base64') }) }), claims.fileContent);
   // --- agent pipeline (analysis can NEVER change status) and live progress
   r.post('/claims/:id/analyze', authed, analyzeLimiter, withClaimId, claims.analyzeFactory(analysis));
   r.get('/claims/:id/stream', requireAuth({ allowQueryToken: true }), withClaimId, claims.streamFactory(events));
