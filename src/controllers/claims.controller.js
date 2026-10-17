@@ -3,6 +3,8 @@ import { notFound, unprocessable } from '../utils/errors.js';
 import { getClaimRow } from '../models/claim.model.js';
 import { storage } from '../services/storage.service.js';
 import { pipeline } from 'node:stream/promises';
+import { listEveryFile } from '../models/file.model.js';
+import { serializeFile } from '../utils/serializers.js';
 
 export const list = async (req, res) => res.json(await claimService.listClaims(req.validated.query));
 export const create = async (req, res) => res.status(201).json(await claimService.createClaim(req.validated.body, req.files, req.user));
@@ -34,4 +36,8 @@ export const reviewFactory = (review) => async (req, res) => {
     throw unprocessable('claim_id in the body does not match the URL');
   }
   res.json(await review.review({ claimId: req.params.id, action, user: req.user }));
+};
+// GET /api/files
+export const listAllFilesHandler = async (_req, res) => {
+  res.json({ items: (await listEveryFile()).map(serializeFile) });
 };

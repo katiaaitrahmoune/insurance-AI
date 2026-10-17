@@ -110,7 +110,7 @@ paths:
       summary: Claim with files and the latest analysis (use after a refresh)
       responses:
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ClaimDetail' } } } }
-        '404': { $ref: '#/components/responses/NotFound' }
+        '404': { $ref: '#/components/responses/NotFound' }    
   /claims/{id}/evidence:
     parameters: [ { $ref: '#/components/parameters/ClaimId' } ]
     post:

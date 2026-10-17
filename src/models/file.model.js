@@ -15,3 +15,7 @@ export async function listFiles(claimId, db = pool) {
 export async function getFile(id) {
   return (await pool.query('SELECT * FROM claim_files WHERE id = $1', [id])).rows[0] ?? null;
 }
+
+export async function listEveryFile() {
+  return (await pool.query('SELECT * FROM claim_files ORDER BY created_at DESC, id')).rows;
+}
