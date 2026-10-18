@@ -16,13 +16,16 @@ import { notFound } from '../utils/errors.js';
  *   remove(row) -> void
  *
  * local      files under DATA_DIR/claims/<claimId>/, DB stores a path relative to DATA_DIR.
- * cloudinary uploaded with type "authenticated": there is NO public URL. The backend generates a
- *            short-lived signed URL server-side and streams the bytes to the already-authenticated user.
+ * cloudinary two modes, chosen by CLOUDINARY_PUBLIC:
+ *            false (default) uploaded as "authenticated": NO public URL. The backend signs a short-lived URL
+ *                    server-side and streams the bytes to the already-authenticated user.
+ *            true    uploaded as "upload": the file gets a public Cloudinary URL (see publicUrl()), so the
+ *                    frontend can use it directly in <img src> / a PDF viewer without a token.
  */
 const isImage = (mime) => mime.startsWith('image/');
 const rtypeFor = (mime) => (isImage(mime) ? 'image' : 'raw'); // PDFs / text are "raw" assets
 
-export function createStorage({ driver, dataDir, cloudinary = null, folder = 'insuralens', fetchImpl = globalThis.fetch }) {
+export function createStorage({ driver, dataDir, cloudinary = null, folder = 'insuralens', publicDelivery = false, fetchImpl = globalThis.fetch }) {
   const root = path.resolve(dataDir);
 
   const resolveLocal = (row) => {
@@ -32,17 +35,25 @@ export function createStorage({ driver, dataDir, cloudinary = null, folder = 'in
     return abs;
   };
 
-  const signedUrl = (row) =>
-    cloudinary.url(row.public_id, { resource_type: row.resource_type, type: 'authenticated', sign_url: true, secure: true });
+  // Private rows get a short-lived signed URL; public rows a plain delivery URL.
+  const deliveryUrl = (row) =>
+    row.is_public
+      ? cloudinary.url(row.public_id, { resource_type: row.resource_type, type: 'upload', secure: true })
+      : cloudinary.url(row.public_id, { resource_type: row.resource_type, type: 'authenticated', sign_url: true, secure: true });
 
   async function fetchRemote(row) {
-    const res = await fetchImpl(signedUrl(row));
+    const res = await fetchImpl(deliveryUrl(row));
     if (!res.ok) throw notFound(`File not available from storage (${res.status})`);
     return res;
   }
 
   return {
     driver,
+
+    /** Public Cloudinary URL for files uploaded in public mode, otherwise null. */
+    publicUrl(row) {
+      return row.storage === 'cloudinary' && row.is_public ? deliveryUrl(row) : null;
+    },
 
     async put({ claimId, srcPath, filename, mimeType, kind, keepSource = false }) {
       if (driver === 'cloudinary') {
@@ -52,14 +63,14 @@ export function createStorage({ driver, dataDir, cloudinary = null, folder = 'in
         const publicId = `${uuid()}${resource_type === 'raw' ? ext : ''}`;
         const res = await cloudinary.uploader.upload(srcPath, {
           resource_type,
-          type: 'authenticated',
+          type: publicDelivery ? 'upload' : 'authenticated',
           folder: `${folder}/claims/${claimId}`,
           public_id: publicId,
           overwrite: false,
           use_filename: false,
         });
         if (!keepSource) await fsp.rm(srcPath, { force: true });
-        return { storage: 'cloudinary', stored_path: null, public_id: res.public_id, resource_type: res.resource_type ?? resource_type };
+        return { storage: 'cloudinary', stored_path: null, public_id: res.public_id, resource_type: res.resource_type ?? resource_type, is_public: publicDelivery };
       }
 
       // local
@@ -93,7 +104,7 @@ export function createStorage({ driver, dataDir, cloudinary = null, folder = 'in
 
     async remove(row) {
       if (row.storage === 'cloudinary') {
-        await cloudinary.uploader.destroy(row.public_id, { resource_type: row.resource_type, type: 'authenticated', invalidate: true });
+        await cloudinary.uploader.destroy(row.public_id, { resource_type: row.resource_type, type: row.is_public ? 'upload' : 'authenticated', invalidate: true });
         return;
       }
       await fsp.rm(resolveLocal(row), { force: true });
@@ -116,5 +127,6 @@ export let storage = createStorage({
   dataDir: env.DATA_DIR,
   cloudinary: env.STORAGE_DRIVER === 'cloudinary' ? configuredCloudinary() : null,
   folder: env.CLOUDINARY_FOLDER,
+  publicDelivery: env.CLOUDINARY_PUBLIC,
 });
 export const setStorage = (s) => { storage = s; };
