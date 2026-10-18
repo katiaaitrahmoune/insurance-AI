@@ -1,5 +1,6 @@
 // The one place that maps DB rows to API JSON. If the frontend's field names differ from these,
 // this file (and docs/API_CONTRACT.md) are the only things to change.
+import { storage } from '../services/storage.service.js';
 export const serializeClaim = (c) => ({
   id: c.id,
   customerName: c.customer_name,
@@ -28,6 +29,7 @@ export const serializeFile = (f) => ({
   mimeType: f.mime_type,
   sizeBytes: f.size_bytes,
   url: `/api/claims/${f.claim_id}/files/${f.id}`,
+  publicUrl: storage.publicUrl(f),
   createdAt: f.created_at,
 });
 
@@ -57,3 +59,4 @@ export const serializeConversation = (c) => ({
   id: c.id, claimId: c.claim_id, title: c.title, lastMessage: c.last_message ?? null,
   createdAt: c.created_at, updatedAt: c.updated_at,
 });
+
