@@ -1,0 +1,1 @@
+ALTER TABLE claim_files ADD COLUMN is_public BOOLEAN NOT NULL DEFAULT false;

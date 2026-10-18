@@ -44,6 +44,7 @@ const schema = z.object({
   CLOUDINARY_API_KEY: z.string().optional().default(''),
   CLOUDINARY_API_SECRET: z.string().optional().default(''),
   CLOUDINARY_FOLDER: z.string().default('insuralens'),
+  CLOUDINARY_PUBLIC: bool.default(true), // true = uploads get a public Cloudinary URL
 }).superRefine((v, ctx) => {
   if (v.STORAGE_DRIVER !== 'cloudinary') return;
   const hasUrl = v.CLOUDINARY_URL.startsWith('cloudinary://');
