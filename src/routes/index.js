@@ -31,7 +31,7 @@ export function buildRouter({ analysis, review, events, chat }) {
 
   // --- claims
   r.get('/claims', authed, validate({ query: listClaimsQuery }), claims.list);
-  r.post('/claims', authed, claimUpload, validate({ body: createClaimBody }), claims.create);
+  r.post('/claims',  claimUpload, validate({ body: createClaimBody }), claims.create);
   r.get('/claims/:id', authed, withClaimId, claims.get);
   r.post('/claims/:id/evidence', authed, withClaimId, claimUpload, claims.addEvidence);
   r.get('/claims/:id/files/:fileId', requireAuth({ allowQueryToken: true }), validate({ params: claimIdParam.extend({ fileId: z.string().uuid() }) }), claims.downloadFile);
@@ -40,6 +40,7 @@ r.get('/files', claims.listAllFilesHandler);
 r.get('/files/:fileId/content',  validate({ params: z.object({ fileId: z.string().uuid() }), query: z.object({ format: z.enum(['base64', 'text']).default('base64') }) }), claims.fileContent);
 r.get(
   '/files/:fileId/image',
+
   validate({
     params: z.object({
       fileId: z.string().uuid()
