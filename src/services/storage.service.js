@@ -65,6 +65,7 @@ export function createStorage({ driver, dataDir, cloudinary = null, folder = 'in
           resource_type,
           type: publicDelivery ? 'upload' : 'authenticated',
           folder: `${folder}/claims/${claimId}`,
+           asset_folder: `${folder}/claims/${claimId}`,
           public_id: publicId,
           overwrite: false,
           use_filename: false,
@@ -130,3 +131,4 @@ export let storage = createStorage({
   publicDelivery: env.CLOUDINARY_PUBLIC,
 });
 export const setStorage = (s) => { storage = s; };
+console.log('[storage]', env.STORAGE_DRIVER, 'public =', env.CLOUDINARY_PUBLIC);
