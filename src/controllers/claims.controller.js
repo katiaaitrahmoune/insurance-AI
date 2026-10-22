@@ -7,6 +7,7 @@ import { pipeline } from 'node:stream/promises';
 import { listEveryFile, getFile as getFileRow } from '../models/file.model.js';
 import { serializeFile } from '../utils/serializers.js';
 import { extractTextFromBuffer } from '../utils/text.js';
+import { query } from '../config/db.js';
 
 export const list = async (req, res) =>
   res.json(await claimService.listClaims(req.validated.query));
@@ -155,4 +156,73 @@ export const getFileImage = async (req, res) => {
   }
 
   await pipeline(stream, res);
+};
+
+
+const COVERAGE = ['covered', 'not_covered', 'partial', 'unclear'];
+const STATES = ['not_started', 'running', 'awaiting_review', 'reviewing', 'reviewed', 'failed'];
+
+// accepts both estimatedAmount and EstimatedAmount
+const pick = (b, name) => b[name] ?? b[name[0].toUpperCase() + name.slice(1)];
+
+// PATCH /api/claims/:id/analysis
+// Called by the AI agent when it finishes. Never touches `status`.
+export const updateAnalysis = async (req, res) => {
+  const b = req.body ?? {};
+  const sets = [];
+  const values = [];
+  const add = (column, value) => {
+    values.push(value);
+    sets.push(`${column} = $${values.length}`);
+  };
+
+  const amount = pick(b, 'estimatedAmount');
+  if (amount !== undefined) {
+    const n = amount === null ? null : Number(amount);
+    if (n !== null && (!Number.isFinite(n) || n < 0 || n > 9999999999.99)) {
+      throw unprocessable('estimatedAmount must be a number >= 0');
+    }
+    add('estimated_amount', n);
+  }
+
+  const summary = pick(b, 'damageSummary');
+  if (summary !== undefined) {
+    if (summary !== null && typeof summary !== 'string') {
+      throw unprocessable('damageSummary must be a string');
+    }
+    add('damage_summary', summary);
+  }
+
+  const coverage = pick(b, 'coverageStatus');
+  if (coverage !== undefined) {
+    if (coverage !== null && !COVERAGE.includes(coverage)) {
+      throw unprocessable(`coverageStatus must be one of: ${COVERAGE.join(', ')}`);
+    }
+    add('coverage_status', coverage);
+  }
+
+  const flag = pick(b, 'inconsistencyFlag');
+  if (flag !== undefined) {
+    if (typeof flag !== 'boolean') throw unprocessable('inconsistencyFlag must be true or false');
+    add('inconsistency_flag', flag);
+  }
+
+  // the AI is done when it calls this route, so default to awaiting_review
+  const state = pick(b, 'analysisState') ?? 'awaiting_review';
+  if (!STATES.includes(state)) {
+    throw unprocessable(`analysisState must be one of: ${STATES.join(', ')}`);
+  }
+  add('analysis_state', state);
+
+  values.push(req.params.id);
+  const { rows } = await query(
+    `UPDATE claims
+        SET ${sets.join(', ')}, updated_at = now()
+      WHERE id = $${values.length}
+      RETURNING *`,
+    values
+  );
+
+  if (!rows[0]) throw notFound(`Claim ${req.params.id} not found`);
+  res.json(rows[0]);
 };
