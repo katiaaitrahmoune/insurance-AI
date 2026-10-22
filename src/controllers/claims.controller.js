@@ -162,7 +162,7 @@ export const getFileImage = async (req, res) => {
 const COVERAGE = ['covered', 'not_covered', 'partial', 'unclear'];
 const STATES = ['not_started', 'running', 'awaiting_review', 'reviewing', 'reviewed', 'failed'];
 
-// accepts both estimatedAmount and EstimatedAmount
+
 const pick = (b, name) => b[name] ?? b[name[0].toUpperCase() + name.slice(1)];
 
 
