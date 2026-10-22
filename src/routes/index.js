@@ -63,6 +63,6 @@ r.patch('/claims/:id/analysis', authed, withClaimId, claims.updateAnalysis);
   r.get('/chat/conversations/:id', authed, validate({ params: conversationIdParam }), chatC.get);
   r.post('/chat/conversations/:id/messages', authed, validate({ params: conversationIdParam, body: sendMessageBody }), chatC.send);
   r.post('/chat/messages', authed, validate({ body: sendMessageBody }), chatC.send);
-
+r.delete('/chat/conversations/:id', authed, validate({ params: conversationIdParam }), chatCtl.deleteConversation);
   return r;
 }
