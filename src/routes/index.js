@@ -48,6 +48,8 @@ r.get(
   }),
   claims.getFileImage
 );
+// --- AI saves its result here (never changes status)
+r.patch('/claims/:id/analysis', authed, withClaimId, claims.updateAnalysis);
   // --- agent pipeline (analysis can NEVER change status) and live progress
   r.post('/claims/:id/analyze', authed, analyzeLimiter, withClaimId, claims.analyzeFactory(analysis));
   r.get('/claims/:id/stream', requireAuth({ allowQueryToken: true }), withClaimId, claims.streamFactory(events));
