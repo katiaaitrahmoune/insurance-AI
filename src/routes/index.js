@@ -22,14 +22,10 @@ export function buildRouter({ analysis, review, events, chat }) {
   const withClaimId = validate({ params: claimIdParam });
 
   r.get('/health', misc.health);
-
-  // --- auth
   r.post('/auth/login', loginLimiter, validate({ body: loginBody }), auth.login);
   r.post('/auth/demo', loginLimiter, auth.demo);
   r.get('/auth/me', authed, auth.me);
   r.post('/auth/logout', authed, auth.logout);
-
-  // --- claims
   r.get('/claims', authed, validate({ query: listClaimsQuery }), claims.list);
   r.post('/claims',  claimUpload, validate({ body: createClaimBody }), claims.create);
   r.get('/claims/:id', authed, withClaimId, claims.get);
@@ -48,19 +44,13 @@ r.get(
   }),
   claims.getFileImage
 );
-// --- AI saves its result here (never changes status)
+
 r.patch('/claims/:id/analysis', authed, withClaimId, claims.updateAnalysis);
-  // --- agent pipeline (analysis can NEVER change status) and live progress
+  
   r.post('/claims/:id/analyze', authed, analyzeLimiter, withClaimId, claims.analyzeFactory(analysis));
   r.get('/claims/:id/stream', requireAuth({ allowQueryToken: true }), withClaimId, claims.streamFactory(events));
-
-  // --- human review: the ONLY route that reaches update_claim
   r.post('/claims/:id/review', authed, withClaimId, validate({ body: reviewBody }), claims.reviewFactory(review));
-
-  // --- evidence viewer
   r.get('/sources/:sourceId', authed, validate({ params: z.object({ sourceId: z.string().regex(/^[A-Za-z0-9_.:-]{3,120}$/) }) }), misc.source);
-
-  // --- supporting screens
   r.get('/policies', authed, misc.policies);
   r.get('/dashboard/summary', authed, misc.dashboard);
   r.get('/analytics', authed, validate({ query: analyticsQuery }), misc.analytics);
@@ -68,8 +58,6 @@ r.patch('/claims/:id/analysis', authed, withClaimId, claims.updateAnalysis);
   r.get('/notifications', authed, misc.listNotifications);
   r.post('/notifications/read-all', authed, misc.readAllNotifications);
   r.post('/notifications/:id/read', authed, validate({ params: z.object({ id: z.string().uuid() }) }), misc.readNotification);
-
-  // --- chat
   r.get('/chat/conversations', authed, chatCtl.listConversations);
   r.post('/chat/conversations', authed, validate({ body: createConversationBody }), chatCtl.createConversation);
   r.get('/chat/conversations/:id', authed, validate({ params: conversationIdParam }), chatC.get);

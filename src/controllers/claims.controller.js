@@ -165,8 +165,7 @@ const STATES = ['not_started', 'running', 'awaiting_review', 'reviewing', 'revie
 // accepts both estimatedAmount and EstimatedAmount
 const pick = (b, name) => b[name] ?? b[name[0].toUpperCase() + name.slice(1)];
 
-// PATCH /api/claims/:id/analysis
-// Called by the AI agent when it finishes. Never touches `status`.
+
 export const updateAnalysis = async (req, res) => {
   const b = req.body ?? {};
   const sets = [];
@@ -207,7 +206,7 @@ export const updateAnalysis = async (req, res) => {
     add('inconsistency_flag', flag);
   }
 
-  // the AI is done when it calls this route, so default to awaiting_review
+  
   const state = pick(b, 'analysisState') ?? 'awaiting_review';
   if (!STATES.includes(state)) {
     throw unprocessable(`analysisState must be one of: ${STATES.join(', ')}`);
