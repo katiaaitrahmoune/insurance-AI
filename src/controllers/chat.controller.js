@@ -1,5 +1,7 @@
 import * as chatModel from '../models/chat.model.js';
 import { serializeConversation } from '../utils/serializers.js';
+import { pool } from '../config/db.js';
+import { notFound } from '../utils/errors.js';
 
 export const listConversations = async (req, res) =>
   res.json({ items: (await chatModel.listConversations(req.user.id)).map(serializeConversation) });
@@ -17,3 +19,24 @@ export const factory = (chat) => ({
     res.status(201).json(await chat.sendMessage(req.user, body));
   },
 });
+
+
+
+export const deleteConversation = async (req, res) => {
+ 
+  const { rowCount } = await pool.query(
+    `WITH owned AS (
+       SELECT id FROM chat_conversations WHERE id = $1 AND user_id = $2
+     ),
+     del_messages AS (
+       DELETE FROM chat_messages
+        WHERE conversation_id IN (SELECT id FROM owned)
+     )
+     DELETE FROM chat_conversations
+      WHERE id IN (SELECT id FROM owned)`,
+    [req.params.id, req.user.id]
+  );
+
+  if (!rowCount) throw notFound('Conversation not found');
+  res.status(204).end();
+};
