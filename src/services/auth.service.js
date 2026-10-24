@@ -4,9 +4,7 @@ import { env } from '../env.js';
 import { upsertUser, getUser } from '../models/user.model.js';
 import { ApiError, unauthorized } from '../utils/errors.js';
 
-// Demo-grade authentication on purpose: the charter scopes out "advanced authentication".
-// Any work email + the demo password signs in (mirrors the frontend prototype). Swap this file
-// for SSO/real credentials without touching the rest of the API.
+
 const same = (a, b) => {
   const x = Buffer.from(a);
   const y = Buffer.from(b);

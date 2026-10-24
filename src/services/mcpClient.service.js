@@ -5,7 +5,7 @@ export class McpToolError extends Error {
   constructor(code, message) {
     super(message);
     this.name = 'McpToolError';
-    this.code = code; // NOT_FOUND | INVALID_STATUS | INTERNAL | TRANSPORT
+    this.code = code; 
   }
 }
 
@@ -32,12 +32,7 @@ async function callTool({ url, token }, name, args) {
   }
 }
 
-/**
- * Guardrail 1, made structural. Two clients, each exposing exactly one capability:
- *   graph  -> { getPolicy }      handed to the agent pipeline. It has no way to even name update_claim,
- *                                and it authenticates with a token whose MCP server has no such tool.
- *   review -> { updateClaim }    used only by the review service (the human-triggered endpoint).
- */
+
 export function createMcpClients({ url, graphToken, reviewToken }) {
   const graph = Object.freeze({
     getPolicy: (policyId) => callTool({ url, token: graphToken }, 'get_policy', { policy_id: policyId }),

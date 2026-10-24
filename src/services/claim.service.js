@@ -37,7 +37,7 @@ async function storeFiles(db, claimId, files, ledger) {
     const put = await storage.put({
       claimId, srcPath: f.path, filename: f.originalname, mimeType: f.verifiedMime, kind: f.kind,
     });
-    ledger.push(put); // remembered so a later failure can clean up already-stored files
+    ledger.push(put); 
     rows.push(await fileModel.insertFile(db, {
       claim_id: claimId, kind: f.kind, original_name: f.originalname.slice(0, 200),
       mime_type: f.verifiedMime, size_bytes: f.size, ...put,

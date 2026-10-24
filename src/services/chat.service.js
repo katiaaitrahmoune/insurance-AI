@@ -7,11 +7,7 @@ import { serializeMessage } from '../utils/serializers.js';
 
 const CLAIM_RE = /\bCLM-\d{3,10}\b/i;
 
-/**
- * Rule-based, evidence-grounded chat. It can start an analysis (the same code path as the REST
- * endpoint) and explain stored findings with their sources. It cannot change a claim's status:
- * this service is not given the review service.
- */
+
 export function createChatService({ analysis }) {
   async function ensureConversation(user, { conversation_id, claim_id }, content) {
     if (conversation_id) {

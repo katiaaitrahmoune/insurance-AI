@@ -9,13 +9,9 @@ import { AgentRunError } from './agents/errors.js';
 import { persistSources, slug } from './source.service.js';
 import { notFound, conflict } from '../utils/errors.js';
 
-/**
- * Runs the agent pipeline. GUARDRAIL: this service is constructed WITHOUT any MCP write client and
- * contains no code path to update_claim — the analysis endpoint physically cannot change a claim's status.
- * It may persist analysis *findings* (damage_summary, coverage_status, inconsistency_flag); not `status`.
- */
+
 export function createAnalysisService({ agents, events, logger }) {
-  const running = new Map(); // claimId -> Promise (lets tests/shutdown await a pipeline)
+  const running = new Map(); 
 
   async function start(claimId, user) {
     const claim = await claimModel.getClaimRow(claimId);
