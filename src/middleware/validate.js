@@ -1,6 +1,6 @@
 import { unprocessable } from '../utils/errors.js';
 
-/** validate({ body, query, params }) — parsed values land on req.validated.<part>. */
+
 export const validate = (schemas) => (req, _res, next) => {
   req.validated = req.validated ?? {};
   for (const [part, schema] of Object.entries(schemas)) {

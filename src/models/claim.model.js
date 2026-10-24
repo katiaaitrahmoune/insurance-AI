@@ -1,6 +1,6 @@
 import { pool } from '../config/db.js';
 
-// NOTE: no function in this file ever writes claims.status. That column belongs to update_claim.
+
 
 export async function nextClaimId(db = pool) {
   const { rows } = await db.query("SELECT 'CLM-' || nextval('claim_number_seq') AS id");
@@ -62,7 +62,7 @@ export async function countsBy(column) {
   return Object.fromEntries(rows.map((r) => [r.key, r.count]));
 }
 
-/** Atomic compare-and-set on analysis_state; returns the updated row or null if the guard failed. */
+
 export async function transitionAnalysis(id, { from, to, stage }, db = pool) {
   const { rows } = await db.query(
     `UPDATE claims SET analysis_state = $3, stage = COALESCE($4, stage), updated_at = now()

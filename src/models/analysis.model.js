@@ -14,7 +14,7 @@ export async function savePart(analysisId, part, json, db = pool) {
   await db.query(`UPDATE claim_analyses SET ${part} = $2 WHERE id = $1`, [analysisId, JSON.stringify(json)]);
 }
 
-/** Append an event and return its sequence number (index in the events array). */
+
 export async function appendEvent(analysisId, event) {
   const { rows } = await pool.query(
     `UPDATE claim_analyses SET events = events || $2::jsonb WHERE id = $1

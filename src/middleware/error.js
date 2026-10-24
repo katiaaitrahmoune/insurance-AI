@@ -4,8 +4,7 @@ import { logger } from '../config/logger.js';
 
 export const notFoundHandler = (req, _res, next) => next(new ApiError(404, 'NOT_FOUND', `Route ${req.method} ${req.path} not found`));
 
-// Every error leaves in the contract envelope: { error: { code, message, details } }
-// eslint-disable-next-line no-unused-vars
+
 export const errorHandler = (err, req, res, _next) => {
   let status = 500;
   let code = 'INTERNAL_ERROR';
@@ -23,7 +22,7 @@ export const errorHandler = (err, req, res, _next) => {
   } else if (err.type === 'entity.too.large') {
     status = 413; code = 'PAYLOAD_TOO_LARGE'; message = 'Request body is too large.';
   } else if (err.code === '42501') {
-    // DB guard rejected a write to the protected status column. Must never happen in normal flow.
+   
     status = 500; code = 'STATUS_GUARD'; message = 'A protected field cannot be changed this way.';
     logger.error({ err }, 'status guard tripped');
   } else {

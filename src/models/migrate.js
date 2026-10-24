@@ -6,7 +6,7 @@ import { logger } from '../config/logger.js';
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'migrations');
 
-/** Plain versioned SQL migrations: NNN_name.sql, applied once, in order, each in a transaction. */
+
 export async function runMigrations() {
   await pool.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
     name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())`);
@@ -19,7 +19,7 @@ export async function runMigrations() {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      // advisory lock: backend + seed script starting together must not double-apply
+     
       await client.query('SELECT pg_advisory_xact_lock(727001)');
       const again = await client.query('SELECT 1 FROM schema_migrations WHERE name=$1', [file]);
       if (!again.rowCount) {

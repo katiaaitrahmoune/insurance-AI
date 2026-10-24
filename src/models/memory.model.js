@@ -6,7 +6,6 @@ export async function insertMemories(db, claimId, rows) {
   }
 }
 
-/** Past cases related by memory type and (optional) content keywords. Supporting signal only. */
 export async function findRelated({ types = [], keywords = [], excludeClaimId = null, limit = 5 }) {
   const params = [];
   const where = [];
