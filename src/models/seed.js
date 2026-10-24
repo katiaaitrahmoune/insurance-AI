@@ -5,7 +5,7 @@ import { storage } from '../services/storage.service.js';
 import { insertFile } from './file.model.js';
 import { seedPolicyClauseSources } from '../services/source.service.js';
 
-/** Idempotent demo data: policies, clause sources, the CLM-1042 scenario, and a deterministic backlog. */
+
 
 const DEMO = {
   id: 'CLM-1042',
@@ -37,7 +37,7 @@ const exists = (p) => fs.access(p).then(() => true, () => false);
 async function registerFile(db, claimId, kind, absPath, mime, dataDir) {
   if (!(await exists(absPath))) return false;
   const name = path.basename(absPath);
-  // Older builds stored absolute paths that break on any other machine: make them portable (relative to DATA_DIR).
+
   await db.query(
     "UPDATE claim_files SET stored_path = substr(stored_path, length($1) + 2) WHERE claim_id=$2 AND storage='local' AND stored_path LIKE $3",
     [dataDir, claimId, `${dataDir}/%`],
@@ -45,13 +45,13 @@ async function registerFile(db, claimId, kind, absPath, mime, dataDir) {
   const dup = await db.query('SELECT 1 FROM claim_files WHERE claim_id=$1 AND original_name=$2', [claimId, name]);
   if (dup.rowCount) return true;
   const { size } = await fs.stat(absPath);
-  // keepSource: the local driver references the file in place; the cloudinary driver uploads a copy.
+ 
   const put = await storage.put({ claimId, srcPath: absPath, filename: name, mimeType: mime, kind, keepSource: true });
   await insertFile(db, { claim_id: claimId, kind, original_name: name, mime_type: mime, size_bytes: size, ...put });
   return true;
 }
 
-/** Run inside a transaction. `dataDir` is the absolute data/ folder holding the sample photos and report. */
+
 export async function seedDemoData(db, dataDir) {
   for (const p of await policyRowsFromDocs()) {
     await db.query(
@@ -62,7 +62,7 @@ export async function seedDemoData(db, dataDir) {
   }
   await seedPolicyClauseSources(db);
 
-  // Demo claim (the scenario the whole demo is built around)
+
   await db.query(
     `INSERT INTO claims (id, customer_name, vehicle, description, policy_id, priority, incident_type, estimated_amount, stage)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'evidence_collection')
@@ -70,7 +70,7 @@ export async function seedDemoData(db, dataDir) {
        description=EXCLUDED.description, policy_id=EXCLUDED.policy_id`,
     [DEMO.id, DEMO.customer_name, DEMO.vehicle, DEMO.description, DEMO.policy_id, DEMO.priority, DEMO.incident_type, DEMO.estimated_amount],
   );
-  // CLM-002 of the policy requires at least four clear photographs, so the demo claim ships with four.
+ 
   const imgs = ['CLM-1042_front_bumper.jpg', 'CLM-1042_left_headlight.jpg', 'CLM-1042_overview.jpg', 'CLM-1042_front_right.jpg'];
   for (const f of imgs) await registerFile(db, DEMO.id, 'image', path.join(dataDir, 'images', f), 'image/jpeg', dataDir);
   const pdf = path.join(dataDir, 'claims', DEMO.id, 'accident_report.pdf');
@@ -79,7 +79,6 @@ export async function seedDemoData(db, dataDir) {
     await registerFile(db, DEMO.id, 'report', txt, 'text/plain', dataDir);
   }
 
-  // A realistic backlog so Dashboard / Claims / Analytics have shape. Deterministic, no randomness.
   for (let i = 1; i <= 24; i++) {
     const shape = SHAPES[i % SHAPES.length];
     const id = `CLM-${1000 + i}`;
@@ -96,6 +95,6 @@ export async function seedDemoData(db, dataDir) {
   }
 
   await db.query("DELETE FROM sources WHERE source_id ~ '^src_pol_[0-9]'"); // invented clauses from an earlier iteration
-  // Retire policy records from earlier iterations that no longer have a document or any claim.
+ 
   await db.query(`DELETE FROM policies p WHERE p.id LIKE 'POL-AUTO-%' AND NOT EXISTS (SELECT 1 FROM claims c WHERE c.policy_id = p.id)`);
 }

@@ -24,7 +24,7 @@ export const addEvidence = async (req, res) =>
     files: await claimService.addEvidence(req.params.id, req.files, req.user)
   });
 
-// Download a claim file.
+
 export const downloadFile = async (req, res) => {
   const f = await claimService.getFileForDownload(
     req.params.id,
@@ -53,7 +53,7 @@ export const downloadFile = async (req, res) => {
   await pipeline(stream, res).catch(() => {});
 };
 
-// Stream claim events.
+
 export const streamFactory = (events) => async (req, res) => {
   if (!(await getClaimRow(req.params.id))) {
     throw notFound(`Claim ${req.params.id} not found`);
@@ -62,11 +62,11 @@ export const streamFactory = (events) => async (req, res) => {
   await events.subscribe(req.params.id, req, res);
 };
 
-// Start claim analysis.
+
 export const analyzeFactory = (analysis) => async (req, res) =>
   res.status(202).json(await analysis.start(req.params.id, req.user));
 
-// Review a claim.
+
 export const reviewFactory = (review) => async (req, res) => {
   const { action, claim_id } = req.validated.body;
 
@@ -83,14 +83,14 @@ export const reviewFactory = (review) => async (req, res) => {
   );
 };
 
-// GET /api/files
+
 export const listAllFilesHandler = async (_req, res) => {
   res.json({
     items: (await listEveryFile()).map(serializeFile)
   });
 };
 
-// GET /api/files/:fileId/content?format=base64|text
+
 export const fileContent = async (req, res) => {
   const f = await getFileRow(req.params.fileId);
 
@@ -133,7 +133,7 @@ export const fileContent = async (req, res) => {
   });
 };
 
-// GET /api/files/:fileId/image
+
 export const getFileImage = async (req, res) => {
   const f = await getFileRow(req.params.fileId);
 
@@ -170,7 +170,7 @@ const STATES = [
 const pick = (b, name) =>
   b[name] ?? b[name[0].toUpperCase() + name.slice(1)];
 
-// Update claim analysis results.
+
 export const updateAnalysis = async (req, res) => {
   const b = req.body ?? {};
   const sets = [];
@@ -181,7 +181,6 @@ export const updateAnalysis = async (req, res) => {
     sets.push(`${column} = $${values.length}`);
   };
 
-  // Estimated amount.
   const amount = pick(b, 'estimatedAmount');
 
   if (amount !== undefined) {
@@ -197,7 +196,7 @@ export const updateAnalysis = async (req, res) => {
     add('estimated_amount', n);
   }
 
-  // Damage summary.
+
   const summary = pick(b, 'damageSummary');
 
   if (summary !== undefined) {
@@ -208,7 +207,6 @@ export const updateAnalysis = async (req, res) => {
     add('damage_summary', summary);
   }
 
-  // Coverage status.
   const coverage = pick(b, 'coverageStatus');
 
   if (coverage !== undefined) {
@@ -221,7 +219,7 @@ export const updateAnalysis = async (req, res) => {
     add('coverage_status', coverage);
   }
 
-  // Inconsistency flag.
+  
   const flag = pick(b, 'inconsistencyFlag');
 
   if (flag !== undefined) {
@@ -232,7 +230,7 @@ export const updateAnalysis = async (req, res) => {
     add('inconsistency_flag', flag);
   }
 
-  // Claim assessment.
+
   const assessment = pick(b, 'ClaimAssessment');
 
   if (assessment !== undefined) {
@@ -243,7 +241,7 @@ export const updateAnalysis = async (req, res) => {
     add('"ClaimAssessment"', assessment);
   }
 
-  // Inconsistency details.
+
   const inconsistencyDetails = pick(b, 'inconsistencyDetails');
 
   if (inconsistencyDetails !== undefined) {
@@ -257,7 +255,7 @@ export const updateAnalysis = async (req, res) => {
     add('"inconsistencyDetails"', inconsistencyDetails);
   }
 
-  // Analysis state.
+
   const state = pick(b, 'analysisState') ?? 'awaiting_review';
 
   if (!STATES.includes(state)) {
@@ -268,7 +266,7 @@ export const updateAnalysis = async (req, res) => {
 
   add('analysis_state', state);
 
-  // Update the claims table.
+ 
   values.push(req.params.id);
 
   const { rows } = await query(
@@ -283,7 +281,7 @@ export const updateAnalysis = async (req, res) => {
     throw notFound(`Claim ${req.params.id} not found`);
   }
 
-  // Save decision in claim_analyses when provided.
+
   const decision = pick(b, 'decision');
 
   if (decision !== undefined) {
