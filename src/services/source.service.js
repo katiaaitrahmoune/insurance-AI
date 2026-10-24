@@ -6,7 +6,7 @@ import { notFound } from '../utils/errors.js';
 
 export const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 
-/** Make every citation in an analysis resolvable by GET /api/sources/:id ("View Source"). */
+
 export async function persistSources({ claim, files, vision, policy, decision }) {
   const reportFile = files.find((f) => f.kind === 'report');
   await withTransaction(async (db) => {
@@ -38,7 +38,7 @@ export async function persistSources({ claim, files, vision, policy, decision })
   });
 }
 
-/** One `sources` row for a policy clause (same shape whether seeded or persisted from a citation). */
+
 export function clauseSource(policyName, policyId, c) {
   return {
     source_id: c.source_id, claim_id: null, kind: 'policy_clause',
@@ -48,7 +48,7 @@ export function clauseSource(policyName, policyId, c) {
   };
 }
 
-/** Seed every ingested policy clause so citations resolve even before any claim is analyzed. */
+
 export async function seedPolicyClauseSources(db) {
   for (const doc of Object.values(await loadPolicyDocs())) {
     for (const c of doc.clauses) await upsertSource(db, clauseSource(doc.name, doc.policy_id, c));

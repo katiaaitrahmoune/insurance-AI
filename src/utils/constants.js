@@ -1,9 +1,7 @@
-// Single source of vocabulary. The frontend's src/lib/constants.ts should mirror these tokens.
 
-// The ONLY values claims.status may hold (guarded column).
 export const CLAIM_STATUSES = ['PENDING', 'APPROVED', 'MORE_INFO_REQUIRED'];
 
-// Workflow position. Never decides anything; purely informational.
+
 export const STAGES = ['intake', 'evidence_collection', 'ai_analysis', 'human_review', 'decided'];
 export const PRIORITIES = ['low', 'medium', 'high'];
 export const INCIDENT_TYPES = [
@@ -15,7 +13,7 @@ export const INCIDENT_TYPES = [
   'other',
 ];
 
-// Separate from status so the guarded column stays {PENDING, APPROVED, MORE_INFO_REQUIRED}.
+
 export const ANALYSIS_STATES = [
   'not_started',
   'running',
@@ -39,7 +37,6 @@ export const MEMORY_TYPES = ['outcome', 'inconsistency', 'coverage'];
 export const AGENTS = ['vision', 'policy', 'decision'];
 export const FILE_KINDS = ['image', 'report', 'policy', 'other'];
 
-// Review action (Seam 4) -> status written by the update_claim MCP tool
 export const REVIEW_ACTION_TO_STATUS = {
   approve: 'APPROVED',
   request_info: 'MORE_INFO_REQUIRED',

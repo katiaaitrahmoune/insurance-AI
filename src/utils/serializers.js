@@ -1,5 +1,4 @@
-// The one place that maps DB rows to API JSON. If the frontend's field names differ from these,
-// this file (and docs/API_CONTRACT.md) are the only things to change.
+
 import { storage } from '../services/storage.service.js';
 export const serializeClaim = (c) => ({
   id: c.id,

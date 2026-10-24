@@ -1,9 +1,6 @@
-// Deterministic evidence checks (Decision Agent step 1: "code first, LLM second").
 const MONTHS = ['january','february','march','april','may','june','july','august','september','october','november','december'];
 const MONTH_RE = '(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
-
 const monthIndex = (name) => MONTHS.findIndex((m) => m.startsWith(name.toLowerCase().slice(0, 3)));
-
 export function parseDates(text) {
   const found = [];
   const mdy = new RegExp(`\\b${MONTH_RE}\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s+(\\d{4}))?\\b`, 'gi');
@@ -18,7 +15,6 @@ export function parseDates(text) {
 
 const ACCIDENT_WORDS = /(accident|collision|collided|incident|occurred|happened|date of loss|crash)/i;
 
-/** Find the date a document says the accident happened, with the sentence it came from. */
 export function extractAccidentDate(text) {
   if (!text) return null;
   const sentences = text.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter(Boolean);

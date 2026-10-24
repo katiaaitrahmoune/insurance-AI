@@ -7,21 +7,7 @@ import { env } from '../env.js';
 import { uuid } from '../utils/ids.js';
 import { notFound } from '../utils/errors.js';
 
-/**
- * File storage with two interchangeable drivers behind one interface:
- *
- *   put({ claimId, srcPath, filename, mimeType, kind, keepSource }) -> columns for claim_files
- *   open(row)   -> { stream, size? }     (used by the download route; auth stays on OUR API)
- *   read(row)   -> Buffer                (used by the agents to read the accident report)
- *   remove(row) -> void
- *
- * local      files under DATA_DIR/claims/<claimId>/, DB stores a path relative to DATA_DIR.
- * cloudinary two modes, chosen by CLOUDINARY_PUBLIC:
- *            false (default) uploaded as "authenticated": NO public URL. The backend signs a short-lived URL
- *                    server-side and streams the bytes to the already-authenticated user.
- *            true    uploaded as "upload": the file gets a public Cloudinary URL (see publicUrl()), so the
- *                    frontend can use it directly in <img src> / a PDF viewer without a token.
- */
+
 const isImage = (mime) => mime.startsWith('image/');
 const rtypeFor = (mime) => (isImage(mime) ? 'image' : 'raw'); // PDFs / text are "raw" assets
 
@@ -29,13 +15,13 @@ export function createStorage({ driver, dataDir, cloudinary = null, folder = 'in
   const root = path.resolve(dataDir);
 
   const resolveLocal = (row) => {
-    if (path.isAbsolute(row.stored_path)) return row.stored_path; // legacy rows written by older builds
+    if (path.isAbsolute(row.stored_path)) return row.stored_path; 
     const abs = path.resolve(root, row.stored_path);
-    if (abs !== root && !abs.startsWith(root + path.sep)) throw notFound('File not found'); // no traversal
+    if (abs !== root && !abs.startsWith(root + path.sep)) throw notFound('File not found');
     return abs;
   };
 
-  // Private rows get a short-lived signed URL; public rows a plain delivery URL.
+
   const deliveryUrl = (row) =>
     row.is_public
       ? cloudinary.url(row.public_id, { resource_type: row.resource_type, type: 'upload', secure: true })
@@ -50,7 +36,7 @@ export function createStorage({ driver, dataDir, cloudinary = null, folder = 'in
   return {
     driver,
 
-    /** Public Cloudinary URL for files uploaded in public mode, otherwise null. */
+
     publicUrl(row) {
       return row.storage === 'cloudinary' && row.is_public ? deliveryUrl(row) : null;
     },
@@ -59,7 +45,7 @@ export function createStorage({ driver, dataDir, cloudinary = null, folder = 'in
       if (driver === 'cloudinary') {
         const resource_type = rtypeFor(mimeType);
         const ext = path.extname(filename).toLowerCase();
-        // raw assets keep their extension in the public_id; images do not
+      
         const publicId = `${uuid()}${resource_type === 'raw' ? ext : ''}`;
         const res = await cloudinary.uploader.upload(srcPath, {
           resource_type,
@@ -114,7 +100,7 @@ export function createStorage({ driver, dataDir, cloudinary = null, folder = 'in
 }
 
 function configuredCloudinary() {
-  // CLOUDINARY_URL is read by the SDK from the environment; otherwise use the three discrete vars.
+
   if (!env.CLOUDINARY_URL) {
     cloudinaryLib.config({ cloud_name: env.CLOUDINARY_CLOUD_NAME, api_key: env.CLOUDINARY_API_KEY, api_secret: env.CLOUDINARY_API_SECRET });
   }
@@ -122,7 +108,7 @@ function configuredCloudinary() {
   return cloudinaryLib;
 }
 
-// Process-wide instance (swappable in tests).
+
 export let storage = createStorage({
   driver: env.STORAGE_DRIVER,
   dataDir: env.DATA_DIR,
